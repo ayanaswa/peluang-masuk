@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peluang masuk</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1f4670;--mute:#5f86ad;--pink:#ec4f8c;--line:#a6d3f7;--card:#f8fcff;--chip:#d6ecff;--hl:#ffc9de;--input:#fff;--g1:#8fd0ff;--g2:#c7e6ff;--g3:#ffd0e3;--bar:#fff;box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e6f1ff;--mute:#9fbbd8;--pink:#ff8fbd;--line:#34557a;--card:#1d2f4a;--chip:#4a2c3f;--hl:#6b3a55;--input:#162538;--g1:#17304a;--g2:#1b2a4a;--g3:#3a2340;--bar:#162538}}
+:root[data-theme="dark"]{--ink:#e6f1ff;--mute:#9fbbd8;--pink:#ff8fbd;--line:#34557a;--card:#1d2f4a;--chip:#4a2c3f;--hl:#6b3a55;--input:#162538;--g1:#17304a;--g2:#1b2a4a;--g3:#3a2340;--bar:#162538}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink);background:linear-gradient(170deg,var(--g1),var(--g2) 55%,var(--g3)) fixed;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+.wrap{max-width:520px;margin:0 auto;padding:28px 20px 130px}
+h1{font-size:2rem;margin:0;letter-spacing:-.03em;font-weight:800;display:flex;align-items:center;gap:12px}
+.badge{background:var(--chip);font-size:1rem;padding:6px 16px;border-radius:99px;font-weight:700}
+.tools{display:flex;flex-wrap:wrap;gap:6px 20px;margin:14px 0 22px;color:var(--mute)}
+.tools button{background:none;border:0;font:inherit;color:var(--mute);cursor:pointer;padding:4px 0;display:flex;gap:6px;align-items:center}
+.tools button:hover{color:var(--pink)}
+.tabs{display:flex;gap:22px;border-bottom:2px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tab{background:none;border:0;font:inherit;font-weight:700;color:var(--mute);padding:8px 0 12px;cursor:pointer;white-space:nowrap;display:flex;gap:8px;align-items:center;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.on{color:var(--pink);border-color:var(--pink)}
+.tab i{font-style:normal;background:var(--chip);color:var(--ink);border-radius:99px;padding:2px 10px;font-size:.85rem}
+.filters{display:flex;gap:12px;margin:20px 0 14px}
+.filters input,.filters select{font:inherit;color:var(--ink);background:var(--input);border:2px solid var(--line);border-radius:22px;padding:13px 18px;min-width:0}
+.filters input{flex:1.3}.filters select{flex:1}
+.info{background:var(--chip);color:var(--mute);border-radius:22px;padding:16px 20px;margin-bottom:18px;font-size:.95rem;line-height:1.6}
+.card{background:var(--card);border:2px solid var(--line);border-radius:30px;padding:22px;margin-bottom:16px}
+.top{display:flex;gap:14px;align-items:center}
+.av{width:52px;height:52px;border-radius:50%;background:var(--chip);color:var(--pink);display:grid;place-items:center;font-weight:800;text-transform:lowercase;flex:none}
+.who{flex:1;min-width:0}.who b{display:block;font-size:1.1rem}.who small{color:var(--mute)}
+.st{border:2px solid var(--line);background:var(--chip);color:var(--pink);font-weight:700;border-radius:99px;padding:5px 14px;font-size:.85rem}
+.bm{background:none;border:0;cursor:pointer;color:var(--ink);padding:4px}
+.bm svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2}
+.bm.on svg{fill:var(--pink);stroke:var(--pink)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.tag{border:2px solid var(--line);background:var(--chip);color:var(--pink);font-weight:700;border-radius:99px;padding:5px 14px;font-size:.85rem}
+.tag.s{border:0;color:var(--mute);background:var(--hl);font-weight:500}
+.txt{font-size:1.15rem;line-height:1.7;margin:0 0 16px;overflow-wrap:anywhere}
+mark{background:var(--hl);color:inherit;border-radius:10px;padding:2px 9px;font-weight:700}
+.act{display:flex;gap:10px;flex-wrap:wrap;border-top:2px solid var(--line);padding-top:14px}
+.act button{font:inherit;font-weight:700;font-size:.9rem;border-radius:99px;border:2px solid var(--line);background:var(--input);color:var(--ink);padding:8px 16px;cursor:pointer}
+.act button.p{background:var(--pink);border-color:var(--pink);color:#fff}
+.empty{text-align:center;color:var(--mute);padding:40px 0}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--bar);border:2px solid var(--line);border-radius:99px;padding:8px;display:flex;gap:8px;box-shadow:0 10px 30px rgba(70,120,180,.18)}
+.nav button{font:inherit;font-weight:700;border:0;background:none;color:var(--mute);padding:14px 30px;border-radius:99px;cursor:pointer}
+.nav button.on{background:var(--pink);color:#fff}
+.set{background:var(--card);border:2px solid var(--line);border-radius:30px;padding:22px;margin-bottom:16px}
+.set h3{margin:0 0 6px}.set p{color:var(--mute);margin:0 0 14px;font-size:.92rem}
+.set input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--input);border:2px solid var(--line);border-radius:18px;padding:12px 16px}
+.row{display:flex;justify-content:space-between;align-items:center}
+.sw{width:54px;height:30px;border-radius:99px;background:var(--line);border:0;position:relative;cursor:pointer}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--pink)}.sw.on::after{left:27px}
+.toast{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--g1);padding:10px 20px;border-radius:99px;font-weight:700;font-size:.9rem;opacity:0;transition:.3s;pointer-events:none}
+.toast.on{opacity:1}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <section id="v-op">
+  <h1>Peluang masuk <span class="badge" id="total">0</span></h1>
+  <div class="tools">
+   <button id="auto">Otomatis: mati</button>
+   <button id="refresh">Segarkan</button>
+   <button id="csv"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>Ekspor CSV</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="filters"><input id="q" placeholder="Cari nama atau isi"><select id="proc"><option value="">Semua proses</option><option>Mencari produk</option><option>Membandingkan</option><option>Siap beli</option></select></div>
+  <div class="info" id="info"></div>
+  <div id="list"></div>
+ </section>
+ <section id="v-set" hidden>
+  <h1>Pengaturan</h1>
+  <div style="height:20px"></div>
+  <div class="set"><div class="row"><div><h3>Segarkan otomatis</h3><p style="margin:0">Cek tweet baru tiap 30 detik</p></div><button class="sw" id="sw"></button></div></div>
+  <div class="set"><h3>Kata kunci</h3><p>Pisahkan dengan koma. Dipakai untuk menyorot isi tweet.</p><input type="text" id="kw"></div>
+ </section>
+</div>
+<nav class="nav"><button class="on" data-v="op">Peluang</button><button data-v="set">Pengaturan</button></nav>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+let items=[
+{id:1,name:'sherin✨',h:'sherinplrrv',ago:1,text:'Disney+ seminggu apa sebulan berapa yaa, mau beli #zonauang',tags:['Disney+','Mencari produk'],st:'Baru',bm:false},
+{id:2,name:'rafi',h:'rafiprmn',ago:6,text:'Ada rekomendasi Netflix atau Disney+ yang lebih murah buat sharing? lagi bandingin harga',tags:['Netflix','Membandingkan'],st:'Baru',bm:false},
+{id:3,name:'dinda',h:'dindaaaa_',ago:14,text:'fix mau beli Spotify premium family hari ini, ada yang jual?',tags:['Spotify','Siap beli'],st:'Baru',bm:false}];
+let tab='Semua',nextId=4,updated=new Date(),newCount=0,timer=null;
+const tabs=['Semua','Baru','Ditindaklanjuti','Selesai'];
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function hl(t){const ks=$('#kw').value.split(',').map(s=>s.trim()).filter(Boolean).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));let h=esc(t);if(ks.length)h=h.replace(new RegExp('('+ks.join('|')+')','gi'),'<mark>$1</mark>');return h}
+function render(){
+ const cnt=s=>items.filter(i=>i.st===s).length;
+ $('#total').textContent=items.length;
+ $('#tabs').innerHTML=tabs.map(t=>`<button class="tab ${t===tab?'on':''}" data-t="${t}">${t}${t!=='Semua'&&cnt(t)?`<i>${cnt(t)}</i>`:''}</button>`).join('');
+ const q=$('#q').value.toLowerCase(),p=$('#proc').value;
+ const f=items.filter(i=>(tab==='Semua'||i.st===tab)&&(!p||i.tags.includes(p))&&(i.name+i.text+i.h).toLowerCase().includes(q));
+ $('#info').textContent=`${newCount} peluang baru dari ${items.length+7} tweet. Diperbarui ${updated.toLocaleTimeString('id-ID')}.`;
+ $('#list').innerHTML=f.length?f.map(i=>`<article class="card"><div class="top"><div class="av">${i.name[0]}</div><div class="who"><b>${esc(i.name)}</b><small>@${i.h} · ${i.ago} menit lalu</small></div><span class="st">${i.st}</span><button class="bm ${i.bm?'on':''}" data-b="${i.id}" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button></div><div class="tags">${i.tags.map(t=>`<span class="tag">${t}</span>`).join('')}<span class="tag s">Feed publik</span></div><p class="txt">${hl(i.text)}</p><div class="act">${i.st==='Baru'?`<button class="p" data-s="${i.id}|Ditindaklanjuti">Tindaklanjuti</button>`:''}${i.st!=='Selesai'?`<button data-s="${i.id}|Selesai">Selesai</button>`:`<button data-s="${i.id}|Baru">Buka lagi</button>`}</div></article>`).join(''):'<div class="empty">Belum ada peluang di sini.</div>';
+}
+document.addEventListener('click',e=>{
+ const t=e.target.closest('[data-t],[data-b],[data-s],[data-v]');if(!t)return;
+ if(t.dataset.t){tab=t.dataset.t}
+ if(t.dataset.b){const i=items.find(x=>x.id==t.dataset.b);i.bm=!i.bm}
+ if(t.dataset.s){const[id,s]=t.dataset.s.split('|');items.find(x=>x.id==id).st=s}
+ if(t.dataset.v){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b===t));$('#v-op').hidden=t.dataset.v!=='op';$('#v-set').hidden=t.dataset.v!=='set';window.scrollTo(0,0);return}
+ render();
+});
+$('#q').oninput=render;$('#proc').onchange=render;$('#kw').oninput=render;
+$('#kw').value='Disney+, Netflix, Spotify, mau beli, rekomendasi, jual';
+const pool=[['kirana','kiranaa','Cari VPN murah buat setahun, ada saran?','VPN','Mencari produk'],['bimo','bimoo_','mau beli ChatGPT Plus patungan, yang amanah dong','ChatGPT','Siap beli'],['lala','lalaaz','Canva Pro vs Adobe, bandingin mana worth it?','Canva','Membandingkan']];
+function refresh(){updated=new Date();newCount=0;if(Math.random()<.6){const p=pool[Math.floor(Math.random()*pool.length)];items.unshift({id:nextId++,name:p[0],h:p[1],ago:1,text:p[2],tags:[p[3],p[4]],st:'Baru',bm:false});newCount=1;toast('1 peluang baru')}else toast('Belum ada peluang baru');render()}
+$('#refresh').onclick=refresh;
+function setAuto(on){$('#auto').textContent='Otomatis: '+(on?'nyala':'mati');$('#sw').classList.toggle('on',on);clearInterval(timer);if(on)timer=setInterval(refresh,30000)}
+$('#auto').onclick=$('#sw').onclick=()=>setAuto(!$('#sw').classList.contains('on'));
+$('#csv').onclick=async()=>{const rows=[['nama','akun','isi','proses','status']].concat(items.map(i=>[i.name,'@'+i.h,i.text,i.tags[1],i.st]));const c=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');try{await navigator.clipboard.writeText(c);toast('CSV disalin ke clipboard')}catch(e){prompt('Salin CSV:',c)}};
+render();
+</script>
+</body>
+</html>
