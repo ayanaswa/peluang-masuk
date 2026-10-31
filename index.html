@@ -55,6 +55,15 @@ mark{background:var(--hl);color:inherit;border-radius:10px;padding:2px 9px;font-
 .sw.on{background:var(--pink)}.sw.on::after{left:27px}
 .toast{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--g1);padding:10px 20px;border-radius:99px;font-weight:700;font-size:.9rem;opacity:0;transition:.3s;pointer-events:none}
 .toast.on{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(30,50,90,.45);display:grid;place-items:center;padding:20px;z-index:20}
+.box{background:var(--card);border:2px solid var(--line);border-radius:30px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow:auto}
+.box h3{margin:0 0 6px;font-size:1.3rem}
+.box label{display:block;font-weight:700;font-size:.9rem;margin:12px 0 6px}
+.box input,.box textarea,.box select{width:100%;font:inherit;color:var(--ink);background:var(--input);border:2px solid var(--line);border-radius:18px;padding:11px 16px}
+.box textarea{min-height:90px;resize:vertical}
+.box .act{border:0;padding-top:18px;justify-content:flex-end}
+.hint{color:var(--mute);font-size:.85rem;line-height:1.5;margin:0 0 8px}
+.tools button.pl{color:var(--pink);font-weight:700}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -64,7 +73,7 @@ mark{background:var(--hl);color:inherit;border-radius:10px;padding:2px 9px;font-
   <h1>Peluang masuk <span class="badge" id="total">0</span></h1>
   <div class="tools">
    <button id="auto">Otomatis: mati</button>
-   <button id="refresh">Segarkan</button>
+   <button id="refresh">Segarkan</button><button id="add" class="pl">+ Tambah</button><button id="imp" class="pl">Impor CSV</button>
    <button id="csv"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>Ekspor CSV</button>
   </div>
   <div class="tabs" id="tabs"></div>
@@ -77,29 +86,46 @@ mark{background:var(--hl);color:inherit;border-radius:10px;padding:2px 9px;font-
   <div style="height:20px"></div>
   <div class="set"><div class="row"><div><h3>Segarkan otomatis</h3><p style="margin:0">Cek tweet baru tiap 30 detik</p></div><button class="sw" id="sw"></button></div></div>
   <div class="set"><h3>Kata kunci</h3><p>Pisahkan dengan koma. Dipakai untuk menyorot isi tweet.</p><input type="text" id="kw"></div>
+  <div class="set"><h3>Data</h3><p>Kartu tersimpan di browser ini saja. Hapus semuanya untuk mulai dari kosong.</p><div class="act" style="border:0;padding:0"><button id="clr">Hapus semua kartu</button></div></div>
  </section>
 </div>
 <nav class="nav"><button class="on" data-v="op">Peluang</button><button data-v="set">Pengaturan</button></nav>
+<div class="modal" id="m-add" hidden><div class="box"><h3>Tambah peluang</h3><p class="hint">Salin dari X, lalu isi di sini. Hanya isi tweet yang wajib.</p>
+<label>Nama</label><input id="f-name" placeholder="mis. sherin">
+<label>Akun</label><input id="f-h" placeholder="mis. sherinplrrv">
+<label>Isi tweet</label><textarea id="f-text" placeholder="Tempel isi tweet"></textarea>
+<label>Produk</label><input id="f-prod" placeholder="mis. Disney+">
+<label>Proses</label><select id="f-proc"><option>Mencari produk</option><option>Membandingkan</option><option>Siap beli</option></select>
+<div class="act"><button data-x="m-add">Batal</button><button class="p" id="f-save">Tambah</button></div></div></div>
+<div class="modal" id="m-imp" hidden><div class="box"><h3>Impor CSV</h3><p class="hint">Pilih file CSV atau tempel isinya. Baris pertama sebaiknya judul kolom: nama,akun,isi,produk,proses. Isi yang mengandung koma harus diapit tanda kutip.</p>
+<label>File CSV</label><input type="file" id="i-file" accept=".csv,.txt">
+<label>Atau tempel di sini</label><textarea id="i-text" placeholder="nama,akun,isi,produk,proses"></textarea>
+<div class="act"><button data-x="m-imp">Batal</button><button class="p" id="i-go">Impor</button></div></div></div>
 <div class="toast" id="toast"></div>
 <script>
 const $=s=>document.querySelector(s);
-let items=[
+const sample=[
 {id:1,name:'sherin✨',h:'sherinplrrv',ago:1,text:'Disney+ seminggu apa sebulan berapa yaa, mau beli #zonauang',tags:['Disney+','Mencari produk'],st:'Baru',bm:false},
 {id:2,name:'rafi',h:'rafiprmn',ago:6,text:'Ada rekomendasi Netflix atau Disney+ yang lebih murah buat sharing? lagi bandingin harga',tags:['Netflix','Membandingkan'],st:'Baru',bm:false},
 {id:3,name:'dinda',h:'dindaaaa_',ago:14,text:'fix mau beli Spotify premium family hari ini, ada yang jual?',tags:['Spotify','Siap beli'],st:'Baru',bm:false}];
-let tab='Semua',nextId=4,updated=new Date(),newCount=0,timer=null;
+const mk=()=>sample.map(i=>({...i,ts:Date.now()-i.ago*60000}));
+let items=[];
+try{const s=localStorage.getItem('peluang');items=s?JSON.parse(s):mk()}catch(e){items=mk()}
+let tab='Semua',nextId=Date.now(),updated=new Date(),newCount=0,timer=null;
+const save=()=>{try{localStorage.setItem('peluang',JSON.stringify(items))}catch(e){}};
+function ago(i){const m=Math.max(1,Math.round((Date.now()-i.ts)/60000));return m<60?m+' menit lalu':m<1440?Math.round(m/60)+' jam lalu':Math.round(m/1440)+' hari lalu'}
 const tabs=['Semua','Baru','Ditindaklanjuti','Selesai'];
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function hl(t){const ks=$('#kw').value.split(',').map(s=>s.trim()).filter(Boolean).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));let h=esc(t);if(ks.length)h=h.replace(new RegExp('('+ks.join('|')+')','gi'),'<mark>$1</mark>');return h}
-function render(){
+function render(){save();
  const cnt=s=>items.filter(i=>i.st===s).length;
  $('#total').textContent=items.length;
  $('#tabs').innerHTML=tabs.map(t=>`<button class="tab ${t===tab?'on':''}" data-t="${t}">${t}${t!=='Semua'&&cnt(t)?`<i>${cnt(t)}</i>`:''}</button>`).join('');
  const q=$('#q').value.toLowerCase(),p=$('#proc').value;
  const f=items.filter(i=>(tab==='Semua'||i.st===tab)&&(!p||i.tags.includes(p))&&(i.name+i.text+i.h).toLowerCase().includes(q));
- $('#info').textContent=`${newCount} peluang baru dari ${items.length+7} tweet. Diperbarui ${updated.toLocaleTimeString('id-ID')}.`;
- $('#list').innerHTML=f.length?f.map(i=>`<article class="card"><div class="top"><div class="av">${i.name[0]}</div><div class="who"><b>${esc(i.name)}</b><small>@${i.h} · ${i.ago} menit lalu</small></div><span class="st">${i.st}</span><button class="bm ${i.bm?'on':''}" data-b="${i.id}" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button></div><div class="tags">${i.tags.map(t=>`<span class="tag">${t}</span>`).join('')}<span class="tag s">Feed publik</span></div><p class="txt">${hl(i.text)}</p><div class="act">${i.st==='Baru'?`<button class="p" data-s="${i.id}|Ditindaklanjuti">Tindaklanjuti</button>`:''}${i.st!=='Selesai'?`<button data-s="${i.id}|Selesai">Selesai</button>`:`<button data-s="${i.id}|Baru">Buka lagi</button>`}</div></article>`).join(''):'<div class="empty">Belum ada peluang di sini.</div>';
+ $('#info').textContent=`${newCount} peluang baru dari ${items.length} tweet. Diperbarui ${updated.toLocaleTimeString('id-ID')}.`;
+ $('#list').innerHTML=f.length?f.map(i=>`<article class="card"><div class="top"><div class="av">${i.name[0]}</div><div class="who"><b>${esc(i.name)}</b><small>@${i.h} · ${ago(i)}</small></div><span class="st">${i.st}</span><button class="bm ${i.bm?'on':''}" data-b="${i.id}" aria-label="Simpan"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button></div><div class="tags">${i.tags.map(t=>`<span class="tag">${t}</span>`).join('')}<span class="tag s">Feed publik</span></div><p class="txt">${hl(i.text)}</p><div class="act">${i.st==='Baru'?`<button class="p" data-s="${i.id}|Ditindaklanjuti">Tindaklanjuti</button>`:''}${i.st!=='Selesai'?`<button data-s="${i.id}|Selesai">Selesai</button>`:`<button data-s="${i.id}|Baru">Buka lagi</button>`}</div></article>`).join(''):'<div class="empty">Belum ada peluang di sini.</div>';
 }
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-t],[data-b],[data-s],[data-v]');if(!t)return;
@@ -111,8 +137,18 @@ document.addEventListener('click',e=>{
 });
 $('#q').oninput=render;$('#proc').onchange=render;$('#kw').oninput=render;
 $('#kw').value='Disney+, Netflix, Spotify, mau beli, rekomendasi, jual';
-const pool=[['kirana','kiranaa','Cari VPN murah buat setahun, ada saran?','VPN','Mencari produk'],['bimo','bimoo_','mau beli ChatGPT Plus patungan, yang amanah dong','ChatGPT','Siap beli'],['lala','lalaaz','Canva Pro vs Adobe, bandingin mana worth it?','Canva','Membandingkan']];
-function refresh(){updated=new Date();newCount=0;if(Math.random()<.6){const p=pool[Math.floor(Math.random()*pool.length)];items.unshift({id:nextId++,name:p[0],h:p[1],ago:1,text:p[2],tags:[p[3],p[4]],st:'Baru',bm:false});newCount=1;toast('1 peluang baru')}else toast('Belum ada peluang baru');render()}
+const open=id=>$('#'+id).hidden=false,close=id=>$('#'+id).hidden=true;
+function addItem(name,h,text,prod,proc){if(!text)return false;h=(h||'anon').replace(/^@/,'');items.unshift({id:nextId++,name:name||h,h,ts:Date.now(),text,tags:[prod||'Produk',proc||'Mencari produk'],st:'Baru',bm:false});newCount++;return true}
+$('#add').onclick=()=>open('m-add');$('#imp').onclick=()=>open('m-imp');
+document.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>close(b.dataset.x));
+$('#f-save').onclick=()=>{if(addItem($('#f-name').value.trim(),$('#f-h').value.trim(),$('#f-text').value.trim(),$('#f-prod').value.trim(),$('#f-proc').value)){['f-name','f-h','f-text','f-prod'].forEach(i=>$('#'+i).value='');close('m-add');tab='Semua';render();toast('Kartu ditambahkan')}else toast('Isi tweet wajib diisi')};
+function parseCSV(t){const rows=[];let r=[],c='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch=='"'){if(t[i+1]=='"'){c+='"';i++}else q=false}else c+=ch}else if(ch=='"')q=true;else if(ch==','){r.push(c);c=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&t[i+1]=='\n')i++;r.push(c);c='';if(r.some(x=>x.trim()))rows.push(r);r=[]}else c+=ch}r.push(c);if(r.some(x=>x.trim()))rows.push(r);return rows}
+function doImport(text){const rows=parseCSV(text);if(!rows.length)return 0;const hdr=rows[0].map(x=>x.trim().toLowerCase());let idx={name:0,h:1,text:2,prod:3,proc:4};if(hdr.includes('isi')||hdr.includes('text')||hdr.includes('tweet')){const f=(...k)=>hdr.findIndex(x=>k.includes(x));idx={name:f('nama','name'),h:f('akun','username','handle'),text:f('isi','text','tweet'),prod:f('produk','product'),proc:f('proses','process')};rows.shift()}
+const P=['Mencari produk','Membandingkan','Siap beli'];let n=0;rows.forEach(r=>{const g=k=>idx[k]>=0?(r[idx[k]]||'').trim():'';if(addItem(g('name'),g('h'),g('text'),g('prod'),P.includes(g('proc'))?g('proc'):'Mencari produk'))n++});return n}
+$('#i-file').onchange=async e=>{const f=e.target.files[0];if(f)$('#i-text').value=await f.text()};
+$('#i-go').onclick=()=>{const n=doImport($('#i-text').value);if(n){$('#i-text').value='';$('#i-file').value='';close('m-imp');tab='Semua';render();toast(n+' kartu diimpor')}else toast('Tidak ada data yang bisa diimpor')};
+$('#clr').onclick=()=>{if(confirm('Hapus semua kartu?')){items=[];newCount=0;render();toast('Semua kartu dihapus')}};
+function refresh(){updated=new Date();newCount=0;render();toast('Diperbarui')}
 $('#refresh').onclick=refresh;
 function setAuto(on){$('#auto').textContent='Otomatis: '+(on?'nyala':'mati');$('#sw').classList.toggle('on',on);clearInterval(timer);if(on)timer=setInterval(refresh,30000)}
 $('#auto').onclick=$('#sw').onclick=()=>setAuto(!$('#sw').classList.contains('on'));
